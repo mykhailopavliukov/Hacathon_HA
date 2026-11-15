@@ -1,0 +1,58 @@
+id,source,code,role,unit_uk,decimals,use_top,use_bottom,template_top,template_bottom
+population,wdi,SP.POP.TOTL,base,осіб,0,1,1,{rank} місце у світі за кількістю населення,{rank} місце з кінця за кількістю населення
+gdp_pc,wdi,NY.GDP.PCAP.CD,base,$,0,1,1,{rank} місце у світі за ВВП на душу населення,{rank} місце з кінця за ВВП на душу населення
+life_exp,wdi,SP.DYN.LE00.IN,base,років,1,1,1,{rank} місце у світі за тривалістю життя,{rank} місце з кінця за тривалістю життя
+gdp_total,wdi,NY.GDP.MKTP.CD,fact,$,0,1,0,{rank} місце у світі за розміром економіки (ВВП),
+density,wdi,EN.POP.DNST,fact,осіб/км²,1,1,1,{rank} місце у світі за густотою населення,{rank} місце з кінця за густотою населення — тут дуже просторо
+forest,wdi,AG.LND.FRST.ZS,fact,% площі,1,1,1,{rank} місце у світі за часткою лісів,{rank} місце з кінця за часткою лісів — лісів майже немає
+arable,wdi,AG.LND.ARBL.ZS,fact,% площі,1,1,0,{rank} місце у світі за часткою орної землі,
+urban,wdi,SP.URB.TOTL.IN.ZS,fact,% населення,1,0,1,,{rank} місце з кінця за часткою міського населення — більшість живе в селах
+fertility,wdi,SP.DYN.TFRT.IN,fact,дітей на жінку,2,1,1,{rank} місце у світі за народжуваністю,{rank} місце з кінця за народжуваністю
+old_age,wdi,SP.POP.65UP.TO.ZS,fact,% населення,1,1,0,{rank} місце у світі за часткою людей 65+ — одна з найстаріших націй,
+young_age,wdi,SP.POP.0014.TO.ZS,fact,% населення,1,1,0,{rank} місце у світі за часткою дітей до 14 років — одна з наймолодших націй,
+pop_growth,wdi,SP.POP.GROW,fact,% на рік,2,1,1,{rank} місце у світі за темпом зростання населення,{rank} місце з кінця за зростанням населення — населення скорочується
+female_share,wdi,SP.POP.TOTL.FE.ZS,fact,% населення,1,1,1,{rank} місце у світі за часткою жінок у населенні,{rank} місце з кінця за часткою жінок — чоловіків помітно більше
+infant_mort,wdi,SP.DYN.IMRT.IN,fact,на 1000 народжених,1,1,1,{rank} місце у світі за дитячою смертністю,{rank} місце з кінця за дитячою смертністю — одна з найнижчих у світі
+inflation,wdi,FP.CPI.TOTL.ZG,fact,%,1,1,0,{rank} місце у світі за інфляцією,
+unemployment,wdi,SL.UEM.TOTL.ZS,fact,%,1,1,1,{rank} місце у світі за рівнем безробіття,{rank} місце з кінця за безробіттям — майже всі працюють
+exports_gdp,wdi,NE.EXP.GNFS.ZS,fact,% ВВП,1,1,0,{rank} місце у світі за часткою експорту у ВВП,
+remittances,wdi,BX.TRF.PWKR.DT.GD.ZS,fact,% ВВП,1,1,0,{rank} місце у світі за грошовими переказами з-за кордону (частка ВВП),
+agri_gdp,wdi,NV.AGR.TOTL.ZS,fact,% ВВП,1,1,0,{rank} місце у світі за часткою сільського господарства в економіці,
+hightech,wdi,TX.VAL.TECH.MF.ZS,fact,% промислового експорту,1,1,0,{rank} місце у світі за часткою високотехнологічного експорту,
+tourists,wdi,ST.INT.ARVL,fact,туристів на рік,0,1,0,{rank} місце у світі за кількістю іноземних туристів,
+co2_pc,wdi,EN.GHG.CO2.PC.CE.AR5,fact,т на особу,2,1,1,{rank} місце у світі за викидами CO₂ на душу населення,{rank} місце з кінця за викидами CO₂ на душу населення
+renewables,wdi,EG.FEC.RNEW.ZS,fact,% енергоспоживання,1,1,0,{rank} місце у світі за часткою відновлюваної енергії,
+pm25,wdi,EN.ATM.PM25.MC.M3,fact,мкг/м³,1,1,1,{rank} місце у світі за забрудненням повітря (PM2.5),{rank} місце з кінця за забрудненням повітря — одне з найчистіших
+internet,wdi,IT.NET.USER.ZS,fact,% населення,1,0,1,,{rank} місце з кінця за доступом до інтернету
+military,wdi,MS.MIL.XPND.GD.ZS,fact,% ВВП,1,1,0,{rank} місце у світі за військовими витратами (частка ВВП),
+education_spend,wdi,SE.XPD.TOTL.GD.ZS,fact,% ВВП,1,1,0,{rank} місце у світі за витратами на освіту (частка ВВП),
+health_spend,wdi,SH.XPD.CHEX.GD.ZS,fact,% ВВП,1,1,0,{rank} місце у світі за витратами на охорону здоров'я (частка ВВП),
+women_parl,wdi,SG.GEN.PARL.ZS,fact,% місць,1,1,0,{rank} місце у світі за часткою жінок у парламенті,
+precipitation,wdi,AG.LND.PRCP.MM,fact,мм на рік,0,1,1,{rank} місце у світі за кількістю опадів,{rank} місце з кінця за кількістю опадів — одна з найпосушливіших країн
+coffee,fao,"Coffee, green",fact,т,0,1,0,{rank} місце у світі за виробництвом кави,
+cocoa,fao,Cocoa beans,fact,т,0,1,0,{rank} місце у світі за виробництвом какао,
+tea,fao,Tea leaves,fact,т,0,1,0,{rank} місце у світі за виробництвом чаю,
+wheat,fao,Wheat,fact,т,0,1,0,{rank} місце у світі за виробництвом пшениці,
+rice,fao,Rice,fact,т,0,1,0,{rank} місце у світі за виробництвом рису,
+maize,fao,Maize (corn),fact,т,0,1,0,{rank} місце у світі за виробництвом кукурудзи,
+barley,fao,Barley,fact,т,0,1,0,{rank} місце у світі за виробництвом ячменю,
+soy,fao,Soya beans,fact,т,0,1,0,{rank} місце у світі за виробництвом сої,
+sunflower,fao,Sunflower seed,fact,т,0,1,0,{rank} місце у світі за виробництвом соняшнику,
+potatoes,fao,Potatoes,fact,т,0,1,0,{rank} місце у світі за виробництвом картоплі,
+sugarcane,fao,Sugar cane,fact,т,0,1,0,{rank} місце у світі за виробництвом цукрової тростини,
+bananas,fao,Bananas,fact,т,0,1,0,{rank} місце у світі за виробництвом бананів,
+olives,fao,Olives,fact,т,0,1,0,{rank} місце у світі за виробництвом оливок,
+grapes,fao,Grapes,fact,т,0,1,0,{rank} місце у світі за виробництвом винограду,
+apples,fao,Apples,fact,т,0,1,0,{rank} місце у світі за виробництвом яблук,
+oranges,fao,Oranges,fact,т,0,1,0,{rank} місце у світі за виробництвом апельсинів,
+avocados,fao,Avocados,fact,т,0,1,0,{rank} місце у світі за виробництвом авокадо,
+dates,fao,Dates,fact,т,0,1,0,{rank} місце у світі за виробництвом фініків,
+pineapples,fao,Pineapples,fact,т,0,1,0,{rank} місце у світі за виробництвом ананасів,
+coconuts,fao,"Coconuts, in shell",fact,т,0,1,0,{rank} місце у світі за виробництвом кокосів,
+cassava,fao,"Cassava, fresh",fact,т,0,1,0,{rank} місце у світі за виробництвом маніоки,
+hazelnuts,fao,"Hazelnuts, in shell",fact,т,0,1,0,{rank} місце у світі за виробництвом фундука,
+rubber,fao,Natural rubber in primary forms,fact,т,0,1,0,{rank} місце у світі за виробництвом натурального каучуку,
+oil_palm,fao,Oil palm fruit,fact,т,0,1,0,{rank} місце у світі за врожаєм олійної пальми,
+cotton,fao,"Seed cotton, unginned",fact,т,0,1,0,{rank} місце у світі за виробництвом бавовни,
+honey,fao,"Natural honey",fact,т,0,1,0,{rank} місце у світі за виробництвом меду,
+milk,fao,Raw milk of cattle,fact,т,0,1,0,{rank} місце у світі за виробництвом коров'ячого молока,

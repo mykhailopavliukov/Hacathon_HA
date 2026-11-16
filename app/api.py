@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, HTTPException
 
-from app import data, queries
+from app import data, hints, queries
 
 router = APIRouter(prefix="/api")
 
@@ -25,10 +25,16 @@ def list_countries() -> list[dict[str, str]]:
     return [_short(row) for row in data.countries().values()]
 
 
-# Declared before "/countries/{iso3}", otherwise "search" would be read as an iso3 code.
+# "search" and "playable" are declared before "/countries/{iso3}",
+# otherwise they would be read as an iso3 code.
 @router.get("/countries/search")
 def search_countries(q: str = "") -> list[dict[str, str]]:
     return [_short(row) for row in queries.search_countries(q)]
+
+
+@router.get("/countries/playable")
+def list_playable() -> list[str]:
+    return hints.playable_countries()
 
 
 @router.get("/countries/{iso3}")

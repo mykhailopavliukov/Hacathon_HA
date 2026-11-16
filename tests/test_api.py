@@ -33,6 +33,14 @@ def test_search_without_query_is_empty(client):
     assert client.get("/api/countries/search").json() == []
 
 
+def test_playable_lists_known_country_codes(client):
+    response = client.get("/api/countries/playable")
+    assert response.status_code == 200
+    codes = response.json()
+    assert "UKR" in codes
+    assert "VAT" not in codes
+
+
 def test_read_country_is_case_insensitive(client):
     response = client.get("/api/countries/ukr")
     assert response.status_code == 200

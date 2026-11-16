@@ -54,6 +54,22 @@ def test_sql_injection_text_is_stored_as_plain_text(scores_db):
     assert db.top_scores()[0]["player"] == "x'); DROP TABLE scores;--"
 
 
+def test_connect_creates_account_tables(scores_db):
+    with closing(db.connect()) as conn:
+        tables = {row["name"] for row in conn.execute("SELECT name FROM sqlite_master")}
+    assert {"scores", "users", "sessions"} <= tables
+
+
+def test_deleting_a_user_deletes_their_sessions(scores_db):
+    with closing(db.connect()) as conn, conn:
+        conn.execute(
+            "INSERT INTO users (username, username_key, password_hash) VALUES ('a','a','x')"
+        )
+        conn.execute("INSERT INTO sessions (token_hash, user_id, expires_at) VALUES ('t', 1, 9)")
+        conn.execute("DELETE FROM users WHERE id = 1")
+        assert conn.execute("SELECT COUNT(*) FROM sessions").fetchone()[0] == 0
+
+
 def test_connect_twice_keeps_existing_table(scores_db):
     with closing(db.connect()) as conn, conn:
         conn.execute("INSERT INTO scores (player, points) VALUES ('a', 5)")

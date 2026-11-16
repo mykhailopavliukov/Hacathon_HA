@@ -1,4 +1,4 @@
-"""SQLite storage for the leaderboard (standard library only)."""
+"""SQLite storage for the leaderboard and user accounts (standard library only)."""
 
 import os
 import sqlite3
@@ -6,25 +6,40 @@ from contextlib import closing
 
 MAX_NAME_LENGTH = 30
 
+# username_key is the casefolded username: it makes names unique ignoring case, also for Cyrillic
+# (SQLite's NOCASE only handles ASCII). Sessions store a hash of the token, never the token.
+_SCHEMA = """
+CREATE TABLE IF NOT EXISTS scores (
+    id INTEGER PRIMARY KEY,
+    player TEXT NOT NULL,
+    points INTEGER NOT NULL CHECK (points >= 0),
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY,
+    username TEXT NOT NULL,
+    username_key TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE IF NOT EXISTS sessions (
+    token_hash TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    expires_at INTEGER NOT NULL
+);
+"""
+
 
 def db_path() -> str:
     return os.environ.get("SCORES_DB", "scores.db")
 
 
 def connect() -> sqlite3.Connection:
-    """Open the database, creating the scores table on first use."""
+    """Open the database, creating the tables on first use."""
     conn = sqlite3.connect(db_path())
     conn.row_factory = sqlite3.Row
-    conn.execute(
-        """
-        CREATE TABLE IF NOT EXISTS scores (
-            id INTEGER PRIMARY KEY,
-            player TEXT NOT NULL,
-            points INTEGER NOT NULL CHECK (points >= 0),
-            created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-        )
-        """
-    )
+    conn.execute("PRAGMA foreign_keys = ON")  # off by default in SQLite; needed for ON DELETE
+    conn.executescript(_SCHEMA)
     return conn
 
 

@@ -57,7 +57,7 @@ def test_sql_injection_text_is_stored_as_plain_text(scores_db):
 def test_connect_creates_account_tables(scores_db):
     with closing(db.connect()) as conn:
         tables = {row["name"] for row in conn.execute("SELECT name FROM sqlite_master")}
-    assert {"scores", "users", "sessions"} <= tables
+    assert {"scores", "users", "sessions", "streaks"} <= tables
 
 
 def test_deleting_a_user_deletes_their_sessions(scores_db):

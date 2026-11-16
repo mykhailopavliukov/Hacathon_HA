@@ -20,6 +20,19 @@ def test_list_countries_returns_short_rows(client):
     assert set(rows[0]) == {"iso3", "name_uk", "name_en", "flag"}
 
 
+def test_search_returns_short_rows(client):
+    response = client.get("/api/countries/search", params={"q": "укр"})
+    assert response.status_code == 200
+    rows = response.json()
+    assert rows[0]["iso3"] == "UKR"
+    assert set(rows[0]) == {"iso3", "name_uk", "name_en", "flag"}
+    assert len(rows) <= 10
+
+
+def test_search_without_query_is_empty(client):
+    assert client.get("/api/countries/search").json() == []
+
+
 def test_read_country_is_case_insensitive(client):
     response = client.get("/api/countries/ukr")
     assert response.status_code == 200

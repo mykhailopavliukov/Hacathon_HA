@@ -6,6 +6,12 @@ from app import data, queries
 
 router = APIRouter(prefix="/api")
 
+_SHORT_KEYS = ("iso3", "name_uk", "name_en", "flag")
+
+
+def _short(row: dict[str, str]) -> dict[str, str]:
+    return {key: row[key] for key in _SHORT_KEYS}
+
 
 def _require_country(iso3: str) -> dict[str, str]:
     country = queries.get_country(iso3.upper())
@@ -16,8 +22,13 @@ def _require_country(iso3: str) -> dict[str, str]:
 
 @router.get("/countries")
 def list_countries() -> list[dict[str, str]]:
-    keys = ("iso3", "name_uk", "name_en", "flag")
-    return [{key: row[key] for key in keys} for row in data.countries().values()]
+    return [_short(row) for row in data.countries().values()]
+
+
+# Declared before "/countries/{iso3}", otherwise "search" would be read as an iso3 code.
+@router.get("/countries/search")
+def search_countries(q: str = "") -> list[dict[str, str]]:
+    return [_short(row) for row in queries.search_countries(q)]
 
 
 @router.get("/countries/{iso3}")

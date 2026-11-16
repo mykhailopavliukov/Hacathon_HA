@@ -24,6 +24,8 @@ build/
 .cache/
 coverage/
 target/
+.pytest_cache/
+.ruff_cache/
 
 # Logs
 *.log

@@ -12,7 +12,18 @@ def make_round() -> Round:
 
 def test_normalize_ignores_case_spaces_and_punctuation() -> None:
     assert normalize("  УКРАЇНА! ") == normalize("україна")
-    assert normalize("Côte  d'Ivoire") == "cote d ivoire"
+    assert normalize("Côte  d'Ivoire") == "cote divoire"
+
+
+def test_normalize_ignores_which_apostrophe_is_typed_or_whether_it_is_typed() -> None:
+    expected = normalize("В'єтнам")
+    for typed in ("Вєтнам", "Вʼєтнам", "В’єтнам", "в`єтнам"):
+        assert normalize(typed) == expected
+
+
+def test_answer_without_apostrophe_is_accepted() -> None:
+    rnd = Round(hints=["h1", "h2"], accepted_names=["М'янма", "Myanmar"])
+    assert rnd.guess("Мянма") is True
 
 
 def test_starts_with_one_hint_and_max_points() -> None:

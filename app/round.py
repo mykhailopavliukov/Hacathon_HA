@@ -12,6 +12,7 @@ from dataclasses import dataclass
 MAX_POINTS = 100
 WRONG_GUESS_PENALTY = 10
 MIN_WIN_POINTS = 10
+APOSTROPHES = "'’ʼ`"
 
 
 def normalize(text: str) -> str:
@@ -19,7 +20,10 @@ def normalize(text: str) -> str:
     decomposed = unicodedata.normalize("NFKD", text.casefold())
     # Dropping combining marks also makes e.g. "й"/"и" and "ї"/"і" equal,
     # which is intentionally lenient for typing on the demo.
-    no_marks = "".join(ch for ch in decomposed if not unicodedata.combining(ch))
+    # Apostrophes are removed, not turned into spaces: people often skip them ("Вєтнам").
+    no_marks = "".join(
+        ch for ch in decomposed if not unicodedata.combining(ch) and ch not in APOSTROPHES
+    )
     words = re.sub(r"[^\w\s]", " ", no_marks).split()
     return " ".join(words)
 

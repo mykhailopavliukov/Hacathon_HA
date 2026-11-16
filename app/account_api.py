@@ -2,10 +2,10 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Response
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Response
 from pydantic import BaseModel, Field
 
-from app import auth
+from app import auth, streaks
 
 router = APIRouter()
 
@@ -71,3 +71,23 @@ def logout(token: BearerToken, user: CurrentUser) -> Response:
 @router.get("/auth/me")
 def me(user: CurrentUser) -> dict:
     return user
+
+
+class RoundResult(BaseModel):
+    solved: bool
+
+
+@router.get("/streak")
+def read_streak(user: CurrentUser) -> dict[str, int]:
+    return streaks.get_streak(user["id"])
+
+
+@router.post("/streak")
+def record_round(result: RoundResult, user: CurrentUser) -> dict[str, int]:
+    """Report a finished round: solved extends the streak, anything else resets it."""
+    return streaks.record_round(user["id"], result.solved)
+
+
+@router.get("/streaks/top")
+def read_top_streaks(limit: int = Query(10, ge=1, le=100)) -> list[dict]:
+    return streaks.top_streaks(limit)

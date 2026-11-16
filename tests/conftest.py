@@ -17,3 +17,9 @@ def _clean_login_state():
     auth._failed_logins.clear()
     yield
     auth._failed_logins.clear()
+
+
+@pytest.fixture(autouse=True)
+def _cheap_scrypt(monkeypatch):
+    """Real scrypt costs 16 MB and tens of ms per hash; tests only need it to be consistent."""
+    monkeypatch.setattr(auth, "_N", 2**4)

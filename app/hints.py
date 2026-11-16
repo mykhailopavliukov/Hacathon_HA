@@ -6,9 +6,7 @@ from functools import cache
 from app import data
 
 MIN_POPULATION_FOR_ANTIRECORD = 1_000_000  # otherwise microstates "win" every bottom list
-TOP_N_STEPS = (10, 20, 30)  # widen the top-N until the country has enough facts
-MIN_FACTS = 2
-MAX_FACTS = 4
+TOP_N_STEPS = (10, 20, 30)  # widen the top-N until the country has a record
 TINY_COUNTRY_KM2 = 10_000  # outline is useless below this, show a point instead
 
 
@@ -24,7 +22,7 @@ def get_hints(iso3: str) -> list[Hint]:
     hints = [
         *_size_hints(iso3),
         *_wealth_hints(iso3),
-        *_fact_hints(iso3),
+        _best_fact_hint(iso3),
         _region_hint(country),
         _neighbors_hint(country),
         _languages_currency_hint(country),
@@ -59,10 +57,15 @@ def _ranking(indicator_id: str, descending: bool) -> dict[str, int]:
 
 
 @cache
-def _area_ranking() -> dict[str, int]:
-    areas = {iso3: float(c["area_km2"]) for iso3, c in data.countries().items() if c["area_km2"]}
-    ordered = sorted(areas, key=areas.get, reverse=True)
-    return {iso3: place for place, iso3 in enumerate(ordered, start=1)}
+def _lead_over_runner_up(indicator_id: str) -> float:
+    """How far the world leader is ahead of the runner-up (1.0 = no lead at all)."""
+    values = sorted(
+        (row[indicator_id] for row in data.stats().values() if indicator_id in row),
+        reverse=True,
+    )
+    if len(values) < 2 or values[1] <= 0:
+        return 1.0
+    return values[0] / values[1]
 
 
 # ---------- hint builders ----------
@@ -72,16 +75,10 @@ def _size_hints(iso3: str) -> list[Hint]:
     hints = []
     population = data.stats()[iso3].get("population")
     if population is not None:
-        place = _ranking("population", descending=True)[iso3]
-        hints.append(
-            Hint("text", f"Населення: {_humanize(population)} осіб ({_place(place)} місце у світі)")
-        )
+        hints.append(Hint("text", f"Населення: {_humanize(population)} осіб"))
     area = data.countries()[iso3]["area_km2"]
     if area:
-        place = _area_ranking()[iso3]
-        hints.append(
-            Hint("text", f"Площа: {_humanize(float(area))} км² ({_place(place)} місце у світі)")
-        )
+        hints.append(Hint("text", f"Площа: {_humanize(float(area))} км²"))
     return hints
 
 
@@ -89,33 +86,22 @@ def _wealth_hints(iso3: str) -> list[Hint]:
     row = data.stats()[iso3]
     hints = []
     if "gdp_pc" in row:
-        place = _ranking("gdp_pc", descending=True)[iso3]
-        hints.append(
-            Hint(
-                "text", f"ВВП на душу: ${_humanize(row['gdp_pc'])} ({_place(place)} місце у світі)"
-            )
-        )
+        hints.append(Hint("text", f"ВВП на душу: ${_humanize(row['gdp_pc'])}"))
     if "life_exp" in row:
-        place = _ranking("life_exp", descending=True)[iso3]
-        years = _humanize(row["life_exp"], 1)
-        hints.append(
-            Hint("text", f"Тривалість життя: {years} років ({_place(place)} місце у світі)")
-        )
+        hints.append(Hint("text", f"Тривалість життя: {_humanize(row['life_exp'], 1)} років"))
     return hints
 
 
-def _fact_hints(iso3: str) -> list[Hint]:
-    """Records and anti-records; the most impressive (smallest place) is shown last."""
-    facts: list[tuple[int, str]] = []
+def _best_fact_hint(iso3: str) -> Hint | None:
+    """The single most striking record: lowest place, then biggest lead over the runner-up."""
     for top_n in TOP_N_STEPS:
         facts = _find_facts(iso3, top_n)
-        if len(facts) >= MIN_FACTS:
-            break
-    best = sorted(facts)[:MAX_FACTS]
-    return [Hint("text", text) for _, text in reversed(best)]
+        if facts:
+            return Hint("text", min(facts)[2])
+    return None
 
 
-def _find_facts(iso3: str, top_n: int) -> list[tuple[int, str]]:
+def _find_facts(iso3: str, top_n: int) -> list[tuple[int, float, str]]:
     facts = []
     for ind_id, ind in data.indicators().items():
         if ind["role"] != "fact":
@@ -133,7 +119,9 @@ def _find_facts(iso3: str, top_n: int) -> list[tuple[int, str]]:
             if place is not None and place <= top_n:
                 text = template.replace("{rank}", _place(place))
                 amount = _humanize(value, int(ind["decimals"]))
-                facts.append((place, f"{text[0].upper()}{text[1:]} ({amount} {ind['unit_uk']})"))
+                lead = _lead_over_runner_up(ind_id) if place == 1 and descending else 1.0
+                phrase = f"{text[0].upper()}{text[1:]} ({amount} {ind['unit_uk']})"
+                facts.append((place, -lead, phrase))
     return facts
 
 

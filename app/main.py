@@ -1,6 +1,7 @@
 """NiceGUI entry point. Run with `uv run python -m app.main`."""
 
 import os
+from pathlib import Path
 
 from nicegui import app as server
 from nicegui import ui
@@ -23,4 +24,11 @@ def server_settings() -> dict:
 
 
 if __name__ in {"__main__", "__mp_main__"}:
-    ui.run(title="Вгадайте країну", reload=False, **server_settings())
+    ui.run(
+        title="ХАлепа Guesser",
+        favicon=str(Path(__file__).resolve().parent / "assets" / "icon.svg"),
+        # storage_secret signs the browser-session cookie that keeps players logged in
+        storage_secret=os.environ.get("STORAGE_SECRET", "halepa-guesser-dev"),
+        reload=False,
+        **server_settings(),
+    )

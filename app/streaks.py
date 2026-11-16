@@ -36,3 +36,16 @@ def get_streak(user_id: int) -> dict[str, int]:
             "SELECT current, best FROM streaks WHERE user_id = ?", (user_id,)
         ).fetchone()
     return {"current": 0, "best": 0} if row is None else {"current": row[0], "best": row[1]}
+
+
+def top_streaks(limit: int = 10) -> list[dict]:
+    """Players with the best streaks first; ties go to whoever registered earlier."""
+    with closing(db.connect()) as conn:
+        rows = conn.execute(
+            "SELECT users.username, streaks.best, streaks.current FROM streaks"
+            " JOIN users ON users.id = streaks.user_id"
+            " WHERE streaks.best > 0"
+            " ORDER BY streaks.best DESC, users.id LIMIT ?",
+            (limit,),
+        ).fetchall()
+    return [dict(row) for row in rows]

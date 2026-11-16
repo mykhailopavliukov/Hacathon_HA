@@ -51,3 +51,25 @@ def test_streaks_are_separate_per_user(user_id):
 def test_unknown_user_is_rejected(scores_db):
     with pytest.raises(ValueError):
         streaks.record_round(999, solved=True)
+
+
+def test_top_streaks_ranks_by_best_and_skips_players_without_wins(user_id):
+    sam = auth.register("Sam", "another horse")
+    auth.register("Ann", "third horse")  # never played
+    for _ in range(2):
+        streaks.record_round(user_id, solved=True)
+    for _ in range(3):
+        streaks.record_round(sam, solved=True)
+    streaks.record_round(sam, solved=False)
+    assert streaks.top_streaks() == [
+        {"username": "Sam", "best": 3, "current": 0},
+        {"username": "Hlib", "best": 2, "current": 2},
+    ]
+
+
+def test_top_streaks_respects_limit(user_id):
+    sam = auth.register("Sam", "another horse")
+    streaks.record_round(user_id, solved=True)
+    streaks.record_round(sam, solved=True)
+    assert len(streaks.top_streaks(limit=1)) == 1
+    assert streaks.top_streaks(limit=1)[0]["username"] == "Hlib"  # tie: registered first

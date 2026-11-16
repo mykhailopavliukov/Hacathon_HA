@@ -15,6 +15,8 @@ USERNAME_PATTERN = re.compile(r"[\w.-]{3,30}")
 MIN_PASSWORD_LENGTH = 8
 MAX_PASSWORD_LENGTH = 128
 SESSION_SECONDS = 7 * 24 * 3600
+MAX_FAILED_LOGINS = 5
+LOCKOUT_SECONDS = 60
 
 # scrypt cost: about 16 MB of memory and tens of milliseconds per hash.
 _N, _R, _P = 2**14, 8, 1
@@ -124,3 +126,41 @@ def get_session_user(token: str) -> dict | None:
 def delete_session(token: str) -> None:
     with closing(db.connect()) as conn, conn:
         conn.execute("DELETE FROM sessions WHERE token_hash = ?", (_hash_token(token),))
+
+
+class TooManyAttempts(Exception):
+    """Too many failed logins for one username in a short time."""
+
+
+# username_key -> times of recent failed logins. In memory: it is per process and resets on restart.
+_failed_logins: dict[str, list[float]] = {}
+_PRUNE_ABOVE = 1000  # forget expired entries once this many usernames are tracked
+
+
+def _recent_failures(key: str, now: float) -> list[float]:
+    if len(_failed_logins) > _PRUNE_ABOVE:
+        for name in list(_failed_logins):
+            _recent_failures(name, now)
+    times = [t for t in _failed_logins.get(key, []) if now - t < LOCKOUT_SECONDS]
+    if times:
+        _failed_logins[key] = times
+    else:
+        _failed_logins.pop(key, None)
+    return times
+
+
+def login(username: str, password: str) -> dict | None:
+    """Like authenticate, but locks a username after MAX_FAILED_LOGINS failures in a minute.
+
+    Raises TooManyAttempts while locked, even when the password is right.
+    """
+    key = username.strip().casefold()
+    now = time.time()
+    if len(_recent_failures(key, now)) >= MAX_FAILED_LOGINS:
+        raise TooManyAttempts("Too many failed attempts, try again in a minute")
+    user = authenticate(username, password)
+    if user is None:
+        _failed_logins.setdefault(key, []).append(now)
+    else:
+        _failed_logins.pop(key, None)
+    return user

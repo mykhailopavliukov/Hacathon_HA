@@ -132,3 +132,55 @@ def test_creating_a_session_removes_expired_ones(scores_db, monkeypatch):
     auth.create_session(user_id)
     with closing(db.connect()) as conn:
         assert conn.execute("SELECT COUNT(*) FROM sessions").fetchone()[0] == 1
+
+
+# --- throttling --------------------------------------------------------------
+
+
+@pytest.fixture(autouse=True)
+def _clean_login_state():
+    auth._failed_logins.clear()
+    yield
+    auth._failed_logins.clear()
+
+
+def _fail(times: int) -> None:
+    for _ in range(times):
+        assert auth.login("Hlib", "wrong password") is None
+
+
+def test_login_succeeds_with_correct_credentials(scores_db):
+    user_id = auth.register("Hlib", "correct horse")
+    assert auth.login("Hlib", "correct horse")["id"] == user_id
+
+
+def test_login_locks_the_name_after_repeated_failures(scores_db):
+    auth.register("Hlib", "correct horse")
+    _fail(auth.MAX_FAILED_LOGINS)
+    with pytest.raises(auth.TooManyAttempts):
+        auth.login("Hlib", "correct horse")  # locked even with the right password
+    with pytest.raises(auth.TooManyAttempts):
+        auth.login("  HLIB ", "wrong password")  # same account, however it is spelled
+
+
+def test_lock_does_not_affect_other_usernames(scores_db):
+    auth.register("Hlib", "correct horse")
+    auth.register("Sam", "another horse")
+    _fail(auth.MAX_FAILED_LOGINS)
+    assert auth.login("Sam", "another horse") is not None
+
+
+def test_lock_expires(scores_db, monkeypatch):
+    auth.register("Hlib", "correct horse")
+    _fail(auth.MAX_FAILED_LOGINS)
+    now = time.time()
+    monkeypatch.setattr(auth.time, "time", lambda: now + auth.LOCKOUT_SECONDS + 1)
+    assert auth.login("Hlib", "correct horse") is not None
+
+
+def test_success_resets_the_failure_count(scores_db):
+    auth.register("Hlib", "correct horse")
+    _fail(auth.MAX_FAILED_LOGINS - 1)
+    assert auth.login("Hlib", "correct horse") is not None
+    _fail(auth.MAX_FAILED_LOGINS - 1)  # would lock if the count had not been reset
+    assert auth.login("Hlib", "correct horse") is not None

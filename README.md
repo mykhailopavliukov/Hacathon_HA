@@ -59,7 +59,7 @@ app/            application code
   main.py       NiceGUI entry point and pages
   data.py       loads and caches the datasets from data/
   queries.py    lookups: get_country, get_value, accepted_names, search_countries
-  api.py        JSON API router (/api/countries, /api/countries/search?q=, /api/countries/{iso3})
+  api.py        JSON API router: /api/countries, /countries/search?q=, /countries/playable, /countries/{iso3}, /countries/{iso3}/hints
 tests/          pytest tests (game logic is tested without the UI)
 data/           provided datasets, read-only (see below)
 scripts/        helper scripts (setup-hooks.sh)

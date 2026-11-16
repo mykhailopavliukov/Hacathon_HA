@@ -3,6 +3,26 @@
 A web game where the player guesses a country from facts about it (population rank, GDP, crops, and so on).
 The datasets in `data/` are provided for the hackathon.
 
+## Hackathon context
+
+Team of 5 KSE students at the Python hackathon of course CS201. About 3.5 hours of work, then a defence.
+
+**Rules**
+- Theme: Open Data. Python is the main language and holds all the logic; HTML/CSS only for display, JS minimal and without logic.
+- Defence: a 1-2 minute demo. Anyone on the team must be able to explain any part of the code.
+- Grading: working program 6, code quality 4 (functions, clear names, no repetition), idea 3, Git 1 (commits from different people), demo 1.
+- Stability comes first: build a minimal working version, then add bonuses.
+
+**Idea:** guess the country from hints. Hints open one by one, from vague to precise; the earlier the guess, the more points.
+
+**Team rules**
+- Everyone commits only their own files, often, with proper messages.
+- Do not change other people's files; ask the owner instead.
+- Agree function names and return values with the team; never change them silently.
+- Handle edge cases so the demo does not crash.
+
+The original plan used Flask + Jinja on Render with a flat module layout; the team chose NiceGUI instead (below).
+
 ## Stack (decided)
 
 - **Python only.** No hand-written JS/TS/HTML/CSS, no Node toolchain.
@@ -38,6 +58,9 @@ uv run ruff format .           # format
 app/            application code
   main.py       NiceGUI entry point and pages
   data.py       loads and caches the datasets from data/
+  queries.py    lookups: get_country, get_value, get_rank, is_unique_value
+  facts.py      record_facts: "N-th in the world by ..." facts for a country
+  api.py        JSON API router (/api/countries, /api/countries/{iso3}, .../facts)
 tests/          pytest tests (game logic is tested without the UI)
 data/           provided datasets, read-only (see below)
 scripts/        helper scripts (setup-hooks.sh)
@@ -73,8 +96,8 @@ separate from the UI code, so it can be tested without a browser.
 
 ### Pull requests
 - Use the PR template; keep PRs small and focused on one topic.
-- At least one teammate review, CI/hooks green, then squash-merge into `main`
-  (the squashed title must follow the commit format).
+- At least one teammate review, CI/hooks green, then **rebase-merge** into `main` (or a plain merge commit).
+  **Never squash:** every atomic commit must stay visible on `main`.
 
 ### Code and documentation
 - **Documentation stays minimal.** Add a comment or docstring only where the code cannot say it itself

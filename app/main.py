@@ -1,8 +1,12 @@
 """NiceGUI entry point. Run with `uv run python -m app.main`."""
 
+from nicegui import app as server
 from nicegui import ui
 
 from app import data
+from app.api import router
+
+server.include_router(router)
 
 
 @ui.page("/")

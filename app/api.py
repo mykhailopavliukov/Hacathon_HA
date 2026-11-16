@@ -1,5 +1,7 @@
 """JSON API over the data layer. Mounted in `app.main`."""
 
+from dataclasses import asdict
+
 from fastapi import APIRouter, HTTPException
 
 from app import data, hints, queries
@@ -40,3 +42,9 @@ def list_playable() -> list[str]:
 @router.get("/countries/{iso3}")
 def read_country(iso3: str) -> dict[str, str]:
     return _require_country(iso3)
+
+
+@router.get("/countries/{iso3}/hints")
+def read_hints(iso3: str) -> list[dict[str, str]]:
+    country = _require_country(iso3)
+    return [asdict(hint) for hint in hints.get_hints(country["iso3"])]

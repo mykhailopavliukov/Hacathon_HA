@@ -5,7 +5,7 @@ import os
 from nicegui import app as server
 from nicegui import ui
 
-from app import data
+import app.ui  # noqa: F401  (registers the "/" page)
 from app.api import router
 
 server.include_router(router)
@@ -22,11 +22,5 @@ def server_settings() -> dict:
     }
 
 
-@ui.page("/")
-def index() -> None:
-    ui.label("Country facts guessing game").classes("text-2xl")
-    ui.label(f"{len(data.countries())} countries loaded")
-
-
 if __name__ in {"__main__", "__mp_main__"}:
-    ui.run(title="Guess the country", reload=False, **server_settings())
+    ui.run(title="Вгадайте країну", reload=False, **server_settings())

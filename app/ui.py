@@ -17,6 +17,14 @@ from app.queries import accepted_names
 from app.round import Round
 
 ASSETS_DIR = Path(__file__).resolve().parent / "assets"
+REPO_URL = "https://github.com/mykhailopavliukov/Hacathon_HA"
+DEVELOPERS = (
+    "Heir-of-God",
+    "mykhailopavliukov",
+    "SamInUkraine",
+    "maksymlytvyn26-pixel",
+    "yehorivannykov26-stack",
+)
 MAX_SUGGESTIONS = 8
 FIREWORK_EMOJIS = ("🎆", "🎇", "✨", "🎉", "🥳")
 MEDALS = {1: "🥇", 2: "🥈", 3: "🥉"}
@@ -365,8 +373,27 @@ def page_frame(width: str = "max-w-[460px]") -> tuple[dict | None, ui.column]:
     with ui.column().classes("w-full items-center gap-6 px-3 pt-4 pb-10"):
         render_top_bar(user)
         content = ui.column().classes(f"w-full {width} items-stretch gap-4")
-        ui.label("for hackathon CS201 Open Data").classes("text-xs text-white/40 mt-6")
+        render_footer()
     return user, content
+
+
+def render_footer() -> None:
+    with ui.column().classes("items-center gap-1 mt-6 text-xs text-white/50"):
+        with ui.row().classes("items-center justify-center gap-x-1 flex-wrap"):
+            ui.label("Developed by:")
+            for index, name in enumerate(DEVELOPERS):
+                ui.link(name, f"https://github.com/{name}", new_tab=True).classes(
+                    "text-white/70 hover:text-white"
+                )
+                if index < len(DEVELOPERS) - 1:
+                    ui.label(",")
+            ui.label("·")
+            ui.link("MIT License", f"{REPO_URL}/blob/main/LICENSE", new_tab=True).classes(
+                "text-white/70 hover:text-white"
+            )
+        ui.label(
+            "KSE CS201 hackathon · Open Data: World Bank, FAOSTAT, Natural Earth, mledoze (ODbL)"
+        )
 
 
 def render_top_bar(user: dict | None) -> None:

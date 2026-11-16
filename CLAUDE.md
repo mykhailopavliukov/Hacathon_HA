@@ -29,5 +29,5 @@ uv run ruff check . && uv run ruff format --check .
 - `data/` is read-only source data (the hook blocks changes). Derived data goes elsewhere, produced by a script.
   Join key is `iso3` (Kosovo = `XKX`); empty cells mean no data, not zero. Do not print `shapes.geojson` (1.5 MB).
 - Keep game logic in plain modules under `app/`, separate from NiceGUI UI code, and test it with pytest.
-- No secrets in the repo. Add dependencies only with a reason (`uv add`, commit `pyproject.toml` + `uv.lock` together).
+- No secrets in the repo. Add dependencies only with a reason (`uv add`, commit `pyproject.toml` + `uv.lock` + regenerated `requirements.txt` together).
 - Verify by running tests and the app before claiming work is done.

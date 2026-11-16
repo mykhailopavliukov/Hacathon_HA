@@ -52,11 +52,21 @@ uv run ruff check .            # lint (add --fix to autofix)
 uv run ruff format .           # format
 ```
 
+## Deploy (Render or any Python host)
+
+- Python version: `.python-version` (3.12).
+- Build command: `pip install -r requirements.txt`
+- Start command: `python -m app.main`
+- Environment: `HOST=0.0.0.0` (the default `127.0.0.1` is local-only); `PORT` is set by the host.
+  The original Flask plan's `gunicorn app:app` does not apply: NiceGUI runs its own server.
+- `requirements.txt` is generated from `uv.lock`; regenerate it after every `uv add` / `uv remove`:
+  `uv export --no-dev --no-hashes --no-emit-project -o requirements.txt`
+
 ## Repository layout
 
 ```
 app/            application code
-  main.py       NiceGUI entry point and pages
+  main.py       NiceGUI entry point and pages; HOST/PORT from environment
   data.py       loads and caches the datasets from data/
   queries.py    lookups: get_country, get_value, accepted_names, search_countries
   api.py        JSON API router: /api/countries, /countries/search?q=, /countries/playable, /countries/{iso3}, /countries/{iso3}/hints
@@ -104,7 +114,7 @@ separate from the UI code, so it can be tested without a browser.
 - Keep README and CLAUDE.md short and current; update them when the stack or workflow changes.
 - Python only: do not add JS/TS files or frontend build tooling.
 - Prefer the standard library and existing dependencies; add a dependency only with a clear reason
-  (`uv add <pkg>`, commit `pyproject.toml` and `uv.lock` together).
+  (`uv add <pkg>`, commit `pyproject.toml`, `uv.lock` and the regenerated `requirements.txt` together).
 - Type-hint public functions. Follow `ruff` (line length 100) and `.editorconfig`.
 
 ### Data and secrets

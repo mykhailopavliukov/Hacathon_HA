@@ -137,13 +137,6 @@ def test_creating_a_session_removes_expired_ones(scores_db, monkeypatch):
 # --- throttling --------------------------------------------------------------
 
 
-@pytest.fixture(autouse=True)
-def _clean_login_state():
-    auth._failed_logins.clear()
-    yield
-    auth._failed_logins.clear()
-
-
 def _fail(times: int) -> None:
     for _ in range(times):
         assert auth.login("Hlib", "wrong password") is None

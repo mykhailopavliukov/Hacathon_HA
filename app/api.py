@@ -5,9 +5,10 @@ from dataclasses import asdict
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
-from app import data, db, hints, queries
+from app import account_api, data, db, hints, queries
 
 router = APIRouter(prefix="/api")
+router.include_router(account_api.router)
 
 _SHORT_KEYS = ("iso3", "name_uk", "name_en", "flag")
 

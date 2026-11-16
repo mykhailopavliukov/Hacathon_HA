@@ -1,3 +1,4 @@
+import time
 from contextlib import closing
 
 import pytest
@@ -82,3 +83,52 @@ def test_authenticate_fails_for_wrong_password_and_unknown_user(scores_db):
 def test_sql_injection_in_login_is_just_a_wrong_name(scores_db):
     auth.register("Hlib", "correct horse")
     assert auth.authenticate("' OR '1'='1", "x") is None
+
+
+# --- sessions ----------------------------------------------------------------
+
+
+def test_session_token_identifies_the_user(scores_db):
+    user_id = auth.register("Hlib", "correct horse")
+    token = auth.create_session(user_id)
+    assert auth.get_session_user(token) == {"id": user_id, "username": "Hlib"}
+
+
+def test_unknown_or_empty_token_is_rejected(scores_db):
+    auth.register("Hlib", "correct horse")
+    assert auth.get_session_user("not-a-token") is None
+    assert auth.get_session_user("") is None
+
+
+def test_database_stores_only_a_hash_of_the_token(scores_db):
+    token = auth.create_session(auth.register("Hlib", "correct horse"))
+    with closing(db.connect()) as conn:
+        stored = [row["token_hash"] for row in conn.execute("SELECT token_hash FROM sessions")]
+    assert stored and token not in stored
+
+
+def test_session_expires(scores_db, monkeypatch):
+    token = auth.create_session(auth.register("Hlib", "correct horse"))
+    now = time.time()
+    monkeypatch.setattr(auth.time, "time", lambda: now + auth.SESSION_SECONDS - 5)
+    assert auth.get_session_user(token) is not None
+    monkeypatch.setattr(auth.time, "time", lambda: now + auth.SESSION_SECONDS + 5)
+    assert auth.get_session_user(token) is None
+
+
+def test_delete_session_logs_out_only_that_session(scores_db):
+    user_id = auth.register("Hlib", "correct horse")
+    first, second = auth.create_session(user_id), auth.create_session(user_id)
+    auth.delete_session(first)
+    assert auth.get_session_user(first) is None
+    assert auth.get_session_user(second) is not None
+
+
+def test_creating_a_session_removes_expired_ones(scores_db, monkeypatch):
+    user_id = auth.register("Hlib", "correct horse")
+    auth.create_session(user_id)
+    now = time.time()
+    monkeypatch.setattr(auth.time, "time", lambda: now + auth.SESSION_SECONDS + 5)
+    auth.create_session(user_id)
+    with closing(db.connect()) as conn:
+        assert conn.execute("SELECT COUNT(*) FROM sessions").fetchone()[0] == 1

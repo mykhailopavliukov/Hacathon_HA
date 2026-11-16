@@ -1,5 +1,5 @@
 from app import data
-from app.facts import Hint, _place, get_hints, playable_countries
+from app.hints import Hint, _place, get_hints, playable_countries
 
 
 def test_known_records():

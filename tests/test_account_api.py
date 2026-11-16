@@ -87,3 +87,53 @@ def test_logout_invalidates_the_token(client, scores_db):
     assert client.post("/api/auth/logout", headers=headers).status_code == 204
     assert client.get("/api/auth/me", headers=headers).status_code == 401
     assert client.post("/api/auth/logout", headers=headers).status_code == 401
+
+
+# --- streaks -----------------------------------------------------------------
+
+
+def test_streak_endpoints_require_login(client, scores_db):
+    assert client.get("/api/streak").status_code == 401
+    assert client.post("/api/streak", json={"solved": True}).status_code == 401
+
+
+def test_streak_grows_and_resets_over_the_api(client, scores_db):
+    _register(client)
+    headers = _login_headers(client)
+    assert client.get("/api/streak", headers=headers).json() == {"current": 0, "best": 0}
+    for _ in range(2):
+        response = client.post("/api/streak", json={"solved": True}, headers=headers)
+    assert response.json() == {"current": 2, "best": 2}
+    reset = client.post("/api/streak", json={"solved": False}, headers=headers)
+    assert reset.json() == {"current": 0, "best": 2}
+    assert client.get("/api/streak", headers=headers).json() == {"current": 0, "best": 2}
+
+
+def test_streak_body_must_be_a_boolean(client, scores_db):
+    _register(client)
+    headers = _login_headers(client)
+    assert client.post("/api/streak", json={}, headers=headers).status_code == 422
+    assert client.post("/api/streak", json={"solved": "maybe"}, headers=headers).status_code == 422
+
+
+def test_streaks_belong_to_the_logged_in_user(client, scores_db):
+    _register(client, "Hlib")
+    _register(client, "Sam", "another horse")
+    hlib = _login_headers(client, "Hlib")
+    sam = _login_headers(client, "Sam", "another horse")
+    client.post("/api/streak", json={"solved": True}, headers=hlib)
+    assert client.get("/api/streak", headers=sam).json() == {"current": 0, "best": 0}
+
+
+def test_top_streaks_is_public_and_ranked(client, scores_db):
+    _register(client, "Hlib")
+    _register(client, "Sam", "another horse")
+    hlib = _login_headers(client, "Hlib")
+    sam = _login_headers(client, "Sam", "another horse")
+    client.post("/api/streak", json={"solved": True}, headers=hlib)
+    for _ in range(3):
+        client.post("/api/streak", json={"solved": True}, headers=sam)
+    board = client.get("/api/streaks/top").json()
+    assert [(row["username"], row["best"]) for row in board] == [("Sam", 3), ("Hlib", 1)]
+    assert "password_hash" not in str(board)
+    assert client.get("/api/streaks/top", params={"limit": 0}).status_code == 422

@@ -61,6 +61,8 @@ app/            application code
   queries.py    lookups: get_country, get_value, get_rank, is_unique_value
   facts.py      record_facts: "N-th in the world by ..." facts for a country
   api.py        JSON API router (/api/countries, /api/countries/{iso3}, .../facts)
+  app/map_data.py — GeoJSON country lookup, antimeridian-aware bounds, and center calculation
+  app/map_view.py — NiceGUI Leaflet map wrapper with country highlighting
 tests/          pytest tests (game logic is tested without the UI)
 data/           provided datasets, read-only (see below)
 scripts/        helper scripts (setup-hooks.sh)

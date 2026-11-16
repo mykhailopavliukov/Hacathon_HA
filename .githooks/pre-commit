@@ -1,0 +1,55 @@
+#!/bin/sh
+# Stack-agnostic pre-commit checks.
+fail=0
+err() { echo "pre-commit: $*" >&2; fail=1; }
+
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$staged" ] && [ -z "$(git diff --cached --name-only)" ] && exit 0
+
+# 1. Source data is read-only unless explicitly overridden.
+if [ -z "$ALLOW_DATA_CHANGE" ]; then
+  if git diff --cached --name-only | grep -q '^data/'; then
+    err "changes under data/ are blocked (set ALLOW_DATA_CHANGE=1 to override)."
+  fi
+fi
+
+# 2. Large files (> 5 MB) outside data/.
+for f in $staged; do
+  case "$f" in data/*) continue ;; esac
+  [ -f "$f" ] || continue
+  size=$(wc -c < "$f")
+  if [ "$size" -gt 5242880 ]; then
+    err "$f is larger than 5 MB."
+  fi
+done
+
+# 3. Likely secrets in added lines (data/ excluded).
+added=$(git diff --cached -U0 --diff-filter=ACMR -- . ':(exclude)data' | grep '^+' | grep -v '^+++')
+pattern='AKIA[0-9A-Z]{16}|-----BEGIN [A-Z ]*PRIVATE KEY-----|gh[pousr]_[A-Za-z0-9]{36,}|sk-[A-Za-z0-9_-]{20,}|xox[baprs]-[A-Za-z0-9-]{10,}|(api[_-]?key|secret|token|password)[[:space:]]*[:=][[:space:]]*["'"'"'][^"'"'"' ]{12,}["'"'"']'
+if printf '%s\n' "$added" | grep -Eqi "$pattern"; then
+  err "possible secret in staged changes."
+fi
+if printf '%s\n' "$staged" | grep -Eq '(^|/)\.env(\.[^/]*)?$' && ! printf '%s\n' "$staged" | grep -Eq '(^|/)\.env\.example$'; then
+  err ".env file staged."
+fi
+
+# 4. Conflict markers and whitespace errors (skip data/ and markdown).
+if ! git diff --cached --check -- . ':(exclude)data' ':(exclude)*.md' >/dev/null 2>&1; then
+  git diff --cached --check -- . ':(exclude)data' ':(exclude)*.md' >&2
+  err "whitespace errors or conflict markers (see above)."
+fi
+
+# 5. Python lint and format check on staged .py files.
+pyfiles=$(printf '%s\n' "$staged" | grep '\.py$')
+if [ -n "$pyfiles" ]; then
+  if command -v uv >/dev/null 2>&1; then
+    # shellcheck disable=SC2086
+    uv run ruff check $pyfiles >&2 || err "ruff check failed (try: uv run ruff check --fix)."
+    uv run ruff format --check $pyfiles >&2 || err "ruff format failed (run: uv run ruff format)."
+  else
+    echo "pre-commit: uv not found, skipping ruff checks." >&2
+  fi
+fi
+
+[ "$fail" -ne 0 ] && echo "pre-commit: commit aborted." >&2
+exit "$fail"

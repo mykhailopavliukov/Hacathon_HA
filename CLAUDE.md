@@ -6,6 +6,8 @@ Guidance for AI coding agents. Full rules are in [README.md](README.md); this is
 
 Web guessing game: guess a country from facts. **Python only** (3.12+, uv, NiceGUI, ruff, pytest).
 Never add JS/TS/HTML/CSS files or Node tooling.
+Hackathon context (grading, 3.5 h budget, defence, team rules) is in the README: prefer a small stable version over extras,
+keep functions small and clearly named so any teammate can explain them, and do not edit files owned by someone else.
 
 ## Commands
 

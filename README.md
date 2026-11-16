@@ -96,8 +96,8 @@ separate from the UI code, so it can be tested without a browser.
 
 ### Pull requests
 - Use the PR template; keep PRs small and focused on one topic.
-- At least one teammate review, CI/hooks green, then squash-merge into `main`
-  (the squashed title must follow the commit format).
+- At least one teammate review, CI/hooks green, then **rebase-merge** into `main` (or a plain merge commit).
+  **Never squash:** every atomic commit must stay visible on `main`.
 
 ### Code and documentation
 - **Documentation stays minimal.** Add a comment or docstring only where the code cannot say it itself

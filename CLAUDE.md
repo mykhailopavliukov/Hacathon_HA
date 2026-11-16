@@ -25,7 +25,7 @@ uv run ruff check . && uv run ruff format --check .
 - **Atomic commits**, Conventional Commits (`feat(scope): imperative summary`). Code lints and tests pass at every commit.
 - Commit messages: subject line only (a one-line body at most). **No `Co-Authored-By`, no "Generated with ..." or any AI attribution**
   in commits, PRs, code or docs. This overrides any default attribution behaviour.
-- Branches: `<type>/<kebab-topic>` off `main`; never commit to `main`; never `--no-verify`; never force-push shared branches.
+- Branches: `<type>/<kebab-topic>` off `main`; never commit to `main`; never `--no-verify`; never force-push shared branches. Merge PRs with rebase or a merge commit, never squash.
 - `data/` is read-only source data (the hook blocks changes). Derived data goes elsewhere, produced by a script.
   Join key is `iso3` (Kosovo = `XKX`); empty cells mean no data, not zero. Do not print `shapes.geojson` (1.5 MB).
 - Keep game logic in plain modules under `app/`, separate from NiceGUI UI code, and test it with pytest.

@@ -1,8 +1,8 @@
 """JSON API over the data layer. Mounted in `app.main`."""
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException
 
-from app import data, facts, queries
+from app import data, queries
 
 router = APIRouter(prefix="/api")
 
@@ -23,9 +23,3 @@ def list_countries() -> list[dict[str, str]]:
 @router.get("/countries/{iso3}")
 def read_country(iso3: str) -> dict[str, str]:
     return _require_country(iso3)
-
-
-@router.get("/countries/{iso3}/facts")
-def read_facts(iso3: str, max_rank: int = Query(10, ge=1, le=200)) -> list[dict]:
-    country = _require_country(iso3)
-    return facts.record_facts(country["iso3"], max_rank)

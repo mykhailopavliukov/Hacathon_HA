@@ -41,6 +41,26 @@ def test_playable_lists_known_country_codes(client):
     assert "VAT" not in codes
 
 
+def test_read_hints_returns_ordered_kind_and_text(client):
+    response = client.get("/api/countries/ukr/hints")
+    assert response.status_code == 200
+    result = response.json()
+    assert len(result) >= 8
+    assert all(set(h) == {"kind", "text"} for h in result)
+    assert result[-1]["text"].startswith("Столиця")
+
+
+def test_hints_for_unknown_country_is_404(client):
+    assert client.get("/api/countries/xyz/hints").status_code == 404
+
+
+def test_every_playable_country_serves_hints(client):
+    for iso3 in client.get("/api/countries/playable").json():
+        response = client.get(f"/api/countries/{iso3}/hints")
+        assert response.status_code == 200, iso3
+        assert response.json(), iso3
+
+
 def test_read_country_is_case_insensitive(client):
     response = client.get("/api/countries/ukr")
     assert response.status_code == 200

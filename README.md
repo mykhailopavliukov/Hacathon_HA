@@ -30,8 +30,12 @@ The original plan used Flask + Jinja on Render with a flat module layout; the te
 - **[NiceGUI](https://nicegui.io/)** for UI and server (FastAPI underneath); its Leaflet element renders the map from `shapes.geojson`.
 - **ruff** for linting and formatting, **pytest** for tests.
 - Country data: no database; CSV/GeoJSON are loaded once at startup (`app/data.py`) and kept in memory.
-- Leaderboard: SQLite file (standard library `sqlite3`), path from `SCORES_DB` (default `scores.db`, git-ignored).
-  On hosts with an ephemeral disk (Render free tier) it resets on every redeploy; fine for a demo.
+- Leaderboard, accounts and streaks: one SQLite file (standard library `sqlite3`), path from `SCORES_DB`
+  (default `scores.db`, git-ignored). On hosts with an ephemeral disk (Render free tier) it resets on every
+  redeploy; fine for a demo.
+- Accounts: passwords hashed with scrypt (standard library), never stored in clear; login returns a random
+  bearer token (only its hash is stored, valid 7 days); 5 failed logins lock a username for a minute.
+- Streak: consecutive solved rounds per account (`current`) and the best run (`best`); a failed round resets it.
 
 Why NiceGUI: per-player state and event handlers fit a game better than rerun-the-script frameworks (Streamlit),
 and it supports map clicks and GeoJSON layers out of the box without any JS.
@@ -71,7 +75,10 @@ app/            application code
   main.py       NiceGUI entry point and pages; HOST/PORT from environment
   data.py       loads and caches the datasets from data/
   queries.py    lookups: get_country, get_value, accepted_names, search_countries
-  db.py         SQLite leaderboard: add_score, top_scores
+  db.py         SQLite: schema, add_score, top_scores
+  auth.py       accounts: hash_password, register, login, sessions
+  streaks.py    win streaks: record_round, get_streak, top_streaks
+  account_api.py  /api/auth/{register,login,logout,me}, /api/streak, /api/streaks/top
   api.py        JSON API router: /api/countries, /countries/search?q=, /countries/playable, /countries/{iso3}, /countries/{iso3}/hints, POST /scores, GET /leaderboard
   map_data.py   GeoJSON country lookup, antimeridian-aware bounds, and center calculation
   map_view.py   NiceGUI Leaflet map wrapper with country highlighting

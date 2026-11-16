@@ -61,6 +61,43 @@ def test_every_playable_country_serves_hints(client):
         assert response.json(), iso3
 
 
+def test_leaderboard_starts_empty(client, scores_db):
+    assert client.get("/api/leaderboard").json() == []
+
+
+def test_posted_score_appears_on_leaderboard(client, scores_db):
+    response = client.post("/api/scores", json={"player": "Ann", "points": 80})
+    assert response.status_code == 201
+    client.post("/api/scores", json={"player": "Bob", "points": 95})
+    board = client.get("/api/leaderboard").json()
+    assert [(row["player"], row["points"]) for row in board] == [("Bob", 95), ("Ann", 80)]
+
+
+def test_leaderboard_limit(client, scores_db):
+    for points in (1, 2, 3):
+        client.post("/api/scores", json={"player": "p", "points": points})
+    assert len(client.get("/api/leaderboard", params={"limit": 2}).json()) == 2
+    assert client.get("/api/leaderboard", params={"limit": 0}).status_code == 422
+
+
+def test_invalid_scores_are_rejected(client, scores_db):
+    bad_bodies = [
+        {"player": "", "points": 5},
+        {"player": "x" * 31, "points": 5},
+        {"player": "ann", "points": -1},
+        {"player": "ann"},
+        {"player": "ann", "points": "many"},
+    ]
+    for body in bad_bodies:
+        assert client.post("/api/scores", json=body).status_code == 422, body
+
+
+def test_blank_name_is_rejected_by_the_database_layer(client, scores_db):
+    response = client.post("/api/scores", json={"player": "   ", "points": 5})
+    assert response.status_code == 422
+    assert client.get("/api/leaderboard").json() == []
+
+
 def test_read_country_is_case_insensitive(client):
     response = client.get("/api/countries/ukr")
     assert response.status_code == 200

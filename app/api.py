@@ -2,9 +2,10 @@
 
 from dataclasses import asdict
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel, Field
 
-from app import data, hints, queries
+from app import data, db, hints, queries
 
 router = APIRouter(prefix="/api")
 
@@ -48,3 +49,22 @@ def read_country(iso3: str) -> dict[str, str]:
 def read_hints(iso3: str) -> list[dict[str, str]]:
     country = _require_country(iso3)
     return [asdict(hint) for hint in hints.get_hints(country["iso3"])]
+
+
+class ScoreIn(BaseModel):
+    player: str = Field(min_length=1, max_length=db.MAX_NAME_LENGTH)
+    points: int = Field(ge=0)
+
+
+@router.post("/scores", status_code=201)
+def create_score(score: ScoreIn) -> dict[str, str]:
+    try:
+        db.add_score(score.player, score.points)
+    except ValueError as error:  # e.g. a name made only of spaces
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    return {"status": "saved"}
+
+
+@router.get("/leaderboard")
+def read_leaderboard(limit: int = Query(10, ge=1, le=100)) -> list[dict]:
+    return db.top_scores(limit)

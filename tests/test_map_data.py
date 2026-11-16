@@ -48,3 +48,21 @@ def test_feature_center_multipolygon_and_empty() -> None:
     assert map_data.get_feature_center(multi_feature) == (5.0, 5.0)
     assert map_data.get_feature_center(None) is None
     assert map_data.get_feature_bounds({"geometry": {"type": "Polygon", "coordinates": []}}) is None
+
+
+def test_feature_bounds_and_center_antimeridian() -> None:
+    # Fiji-like geometry crossing the 180° meridian (+178 to -178)
+    fiji_like = {
+        "type": "Feature",
+        "properties": {"iso3": "FJI"},
+        "geometry": {
+            "type": "MultiPolygon",
+            "coordinates": [
+                [[[178.0, -18.0], [179.0, -18.0], [179.0, -16.0], [178.0, -18.0]]],
+                [[[-179.0, -18.0], [-178.0, -18.0], [-178.0, -16.0], [-179.0, -18.0]]],
+            ],
+        },
+    }
+    bounds = map_data.get_feature_bounds(fiji_like)
+    assert bounds == ((-18.0, 178.0), (-16.0, 182.0))
+    assert map_data.get_feature_center(fiji_like) == (-17.0, 180.0)

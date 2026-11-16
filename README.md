@@ -58,8 +58,8 @@ uv run ruff format .           # format
 app/            application code
   main.py       NiceGUI entry point and pages
   data.py       loads and caches the datasets from data/
-  queries.py    lookups: get_country, get_value
-  api.py        JSON API router (/api/countries, /api/countries/{iso3})
+  queries.py    lookups: get_country, get_value, accepted_names, search_countries
+  api.py        JSON API router (/api/countries, /api/countries/search?q=, /api/countries/{iso3})
 tests/          pytest tests (game logic is tested without the UI)
 data/           provided datasets, read-only (see below)
 scripts/        helper scripts (setup-hooks.sh)

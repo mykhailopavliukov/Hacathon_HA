@@ -5,6 +5,7 @@ import hmac
 import re
 import secrets
 import sqlite3
+import time
 from contextlib import closing
 from functools import cache
 
@@ -13,6 +14,7 @@ from app import db
 USERNAME_PATTERN = re.compile(r"[\w.-]{3,30}")
 MIN_PASSWORD_LENGTH = 8
 MAX_PASSWORD_LENGTH = 128
+SESSION_SECONDS = 7 * 24 * 3600
 
 # scrypt cost: about 16 MB of memory and tens of milliseconds per hash.
 _N, _R, _P = 2**14, 8, 1
@@ -85,3 +87,40 @@ def authenticate(username: str, password: str) -> dict | None:
     if row is None or not password_ok:
         return None
     return {"id": row["id"], "username": row["username"]}
+
+
+def _hash_token(token: str) -> str:
+    # The database keeps only this hash, so a leaked database cannot be used to log in.
+    return hashlib.sha256(token.encode()).hexdigest()
+
+
+def create_session(user_id: int) -> str:
+    """Start a session and return its secret token (shown to the client once)."""
+    token = secrets.token_urlsafe(32)
+    now = int(time.time())
+    with closing(db.connect()) as conn, conn:
+        conn.execute("DELETE FROM sessions WHERE expires_at <= ?", (now,))
+        conn.execute(
+            "INSERT INTO sessions (token_hash, user_id, expires_at) VALUES (?, ?, ?)",
+            (_hash_token(token), user_id, now + SESSION_SECONDS),
+        )
+    return token
+
+
+def get_session_user(token: str) -> dict | None:
+    """Return {"id", "username"} for a valid, unexpired token, otherwise None."""
+    if not token:
+        return None
+    with closing(db.connect()) as conn:
+        row = conn.execute(
+            "SELECT users.id, users.username FROM sessions"
+            " JOIN users ON users.id = sessions.user_id"
+            " WHERE sessions.token_hash = ? AND sessions.expires_at > ?",
+            (_hash_token(token), int(time.time())),
+        ).fetchone()
+    return None if row is None else {"id": row["id"], "username": row["username"]}
+
+
+def delete_session(token: str) -> None:
+    with closing(db.connect()) as conn, conn:
+        conn.execute("DELETE FROM sessions WHERE token_hash = ?", (_hash_token(token),))

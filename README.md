@@ -29,7 +29,9 @@ The original plan used Flask + Jinja on Render with a flat module layout; the te
 - **Python 3.12+**, managed with [uv](https://docs.astral.sh/uv/).
 - **[NiceGUI](https://nicegui.io/)** for UI and server (FastAPI underneath); its Leaflet element renders the map from `shapes.geojson`.
 - **ruff** for linting and formatting, **pytest** for tests.
-- No database: CSV/GeoJSON are loaded once at startup (`app/data.py`) and kept in memory.
+- Country data: no database; CSV/GeoJSON are loaded once at startup (`app/data.py`) and kept in memory.
+- Leaderboard: SQLite file (standard library `sqlite3`), path from `SCORES_DB` (default `scores.db`, git-ignored).
+  On hosts with an ephemeral disk (Render free tier) it resets on every redeploy; fine for a demo.
 
 Why NiceGUI: per-player state and event handlers fit a game better than rerun-the-script frameworks (Streamlit),
 and it supports map clicks and GeoJSON layers out of the box without any JS.
@@ -69,7 +71,8 @@ app/            application code
   main.py       NiceGUI entry point and pages; HOST/PORT from environment
   data.py       loads and caches the datasets from data/
   queries.py    lookups: get_country, get_value, accepted_names, search_countries
-  api.py        JSON API router: /api/countries, /countries/search?q=, /countries/playable, /countries/{iso3}, /countries/{iso3}/hints
+  db.py         SQLite leaderboard: add_score, top_scores
+  api.py        JSON API router: /api/countries, /countries/search?q=, /countries/playable, /countries/{iso3}, /countries/{iso3}/hints, POST /scores, GET /leaderboard
 tests/          pytest tests (game logic is tested without the UI)
 data/           provided datasets, read-only (see below)
 scripts/        helper scripts (setup-hooks.sh)

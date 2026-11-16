@@ -58,8 +58,12 @@ class CountryMap:
         self._active_layers.append(layer)
 
         if focus:
-            center = map_data.get_feature_center(feature)
-            if center:
-                self.map.set_center(center)
-                self.map.set_zoom(4)
+            bounds = map_data.get_feature_bounds(feature)
+            if bounds:
+                (min_lat, min_lon), (max_lat, max_lon) = bounds
+                self.map.run_map_method(
+                    "fitBounds",
+                    [[min_lat, min_lon], [max_lat, max_lon]],
+                    {"padding": [24, 24], "maxZoom": 6},
+                )
         return True

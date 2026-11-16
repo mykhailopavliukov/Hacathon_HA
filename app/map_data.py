@@ -39,7 +39,7 @@ def _extract_points(geometry: dict[str, Any]) -> list[tuple[float, float]]:
 def get_feature_bounds(
     feature: dict[str, Any] | None,
 ) -> tuple[tuple[float, float], tuple[float, float]] | None:
-    """Return ((min_lat, min_lon), (max_lat, max_lon)) for map framing."""
+    """Return ((min_lat, min_lon), (max_lat, max_lon)), handling antimeridian crossings."""
     if not feature:
         return None
 
@@ -50,14 +50,22 @@ def get_feature_bounds(
 
     lats = [p[0] for p in points]
     lons = [p[1] for p in points]
+
+    # Shift negative longitudes by +360 if the country spans across the 180° meridian
+    if max(lons) - min(lons) > 180.0:
+        lons = [lon + 360.0 if lon < 0 else lon for lon in lons]
+
     return (min(lats), min(lons)), (max(lats), max(lons))
 
 
 def get_feature_center(feature: dict[str, Any] | None) -> tuple[float, float] | None:
-    """Return (center_lat, center_lon) based on the feature's bounding box."""
+    """Return normalized (center_lat, center_lon) based on the feature's bounding box."""
     bounds = get_feature_bounds(feature)
     if not bounds:
         return None
 
     (min_lat, min_lon), (max_lat, max_lon) = bounds
-    return (min_lat + max_lat) / 2.0, (min_lon + max_lon) / 2.0
+    center_lon = (min_lon + max_lon) / 2.0
+    if center_lon > 180.0:
+        center_lon -= 360.0
+    return (min_lat + max_lat) / 2.0, center_lon
